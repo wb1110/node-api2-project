@@ -90,26 +90,40 @@ server.put('/api/posts/:id', (req, res) => {
     
 })
 
-server.delete('/api/posts/:id', (req, res) => {
-    const { id } = req.params
-    Posts.remove(id)
-    .then ((deletedPost) => {
-        res.status(204).json(deletedPost)
-    })
-    .catch (err => {
-        res.status(500).json({ message: "The post could not be removed" })
-    })
+server.delete('/api/posts/:id', async (req, res) => {
+    try {
+        const post = await Posts.findById(req.params.id)
+        if (!post) {
+            res.status(404).json({
+                message: 'The post with the specified ID does not exist',
+            })
+        } else {
+            await Posts.remove(req.params.id)
+            res.json(post)
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "the post could not be removed"
+        })
+    }
 })
 
-server.get('/api/posts/:id/comments', (req, res) => {
-    const { id } = req.params
-    Posts.findPostComments(id)
-    .then ((postComments) => {
-        res.status(200).json(postComments)
-    })
-    .catch (err => {
-        res.status(500).json({ message: "The comments information could not be retrieved" })
-    })
+server.get('/api/posts/:id/comments', async (req, res) => {
+    try {
+        const post = await Posts.findById(req.params.id)
+        if (!post) {
+            res.status(404).json({
+                message: 'The post with the specified ID does not exist',
+            })
+        } else {
+            const comments = await Posts.findPostComments(req.params.id)
+            res.json(comments)
+        }
+    } catch (err) {
+        res.status(500).json({
+            message: "The comments information could not be retrieved"
+        })
+    }
 })
 
 module.exports = server
